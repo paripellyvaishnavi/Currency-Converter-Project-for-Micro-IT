@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Currency Converter</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  width: 300px;
+  text-align: center;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Currency Converter</h1>
+    <input type="number" id="amount" placeholder="Enter amount" />
+
+    <div class="dropdowns">
+      <select id="from-currency"></select>
+      <span>→</span>
+      <select id="to-currency"></select>
+    </div>
+
+    <button onclick="convertCurrency()">Convert</button>
+    <p id="result"></p>
+  </div>
+
+  <script src="script.js">
+    document.addEventListener('DOMContentLoaded', () => {
+  const fromCurrency = document.getElementById('from-currency');
+  const toCurrency = document.getElementById('to-currency');
+  const resultDisplay = document.getElementById('result');
+
+  async function loadCurrencies() {
+    try {
+      const res = await fetch('https://api.exchangerate.host/latest');
+      const data = await res.json();
+      const currencies = Object.keys(data.rates);
+
+      currencies.forEach(currency => {
+        fromCurrency.appendChild(new Option(currency, currency));
+        toCurrency.appendChild(new Option(currency, currency));
+      });
+
+      fromCurrency.value = 'USD';
+      toCurrency.value = 'INR';
+    } catch (err) {
+      console.error('Error loading currencies:', err);
+      resultDisplay.textContent = 'Failed to load currencies. Check internet or API.';
+    }
+  }
+
+  window.convertCurrency = async function () {
+    const amount = parseFloat(document.getElementById('amount').value);
+    const from = fromCurrency.value;
+    const to = toCurrency.value;
+
+    if (isNaN(amount)) {
+      resultDisplay.textContent = 'Please enter a valid amount.';
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://api.exchangerate.host/latest?base=${from}&symbols=${to}`);
+      const data = await res.json();
+
+      const rate = data.rates[to];
+      const converted = (amount * rate).toFixed(2);
+      resultDisplay.textContent = `${amount} ${from} = ${converted} ${to}`;
+    } catch (err) {
+      console.error('Error converting currency:', err);
+      resultDisplay.textContent = 'Conversion failed. Try again.';
+    }
+  };
+
+  loadCurrencies();
+});
+
+  </script>
+</body>
+</html>
